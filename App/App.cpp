@@ -1,9 +1,12 @@
 // App.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+#define ZLIB_WINAPI
 #include <iostream>
 
 #include "argparse.hpp"
+
+#include "zlib.h"
 
 int main(int argc, char* argv[])
 {
@@ -35,6 +38,10 @@ int main(int argc, char* argv[])
         std::cerr << program;
         return 1;
     }
+
+    z_stream c_stream; /* compression stream */
+    auto xd = deflateInit(&c_stream, Z_DEFAULT_COMPRESSION);
+
 
     return 0;
 }
