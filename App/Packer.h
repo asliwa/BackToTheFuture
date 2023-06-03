@@ -11,12 +11,11 @@
 
 class Packer : IPackaging
 {
-
-	/*CompressedFile mRawData;
-	File mMetadata;*/
+	CompressedFile mRawData;
+	//File mMetadata;
 
 public:
-	Packer(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder)
+	Packer(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder), mRawData(std::filesystem::path(mWorkingPath) / "Raw")
 	{
 	}
 
@@ -31,11 +30,14 @@ public:
 				continue;
 			}
 
-
-
 			auto file = File{ iter.path() };
-					
-		
+			
+			READ_WRITE_BUFFER buffer;
+
+			while (file.read(buffer))
+			{
+				mRawData.write(buffer);
+			}		
 		}
 	}
 

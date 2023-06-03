@@ -22,14 +22,28 @@ using unique_file_ptr = std::unique_ptr<std::FILE, file_deleter>;
 using unique_gzfile_ptr = std::unique_ptr<gzFile_s, gzfile_deleter>;
 
 
+static constexpr size_t BUFFER_SIZE = 8 * 1024; // 8KB buffer size, prolly the best? maybe tune this
+
+struct READ_WRITE_BUFFER
+{
+	// raw buffer for read/write content, max defined
+	char RawBuffer[BUFFER_SIZE];
+	// actual valid size of content in buffer
+	unsigned Size;
+
+	READ_WRITE_BUFFER()
+	{
+		memset(&RawBuffer, 0, BUFFER_SIZE);
+	}
+};
+
+
 // use raw C fopen/fwrite/fread
 // potential to be faster than c++ streams
 
 class File
 {
 	unique_file_ptr mFile;
-	static constexpr size_t BUFFER_SIZE = 8 * 1024; // 8KB buffer size, prolly the best? maybe tune this
-	char mBuffer[BUFFER_SIZE];
 	size_t mTotalRead = 0;
 	long mSize;
 
@@ -47,8 +61,6 @@ public:
 		unique_file_ptr tmp(rawFilePtr);
 		mFile = std::move(tmp);
 
-		memset(mBuffer, 0, BUFFER_SIZE);
-
 		// use seek (should be safe up to 2GB?) 
 		fseek(mFile.get(), 0, SEEK_END); 
 		mSize = ftell(mFile.get());
@@ -56,17 +68,20 @@ public:
 	}
 
 
-	size_t read()
+	bool read(READ_WRITE_BUFFER& buffer)
 	{
-		auto count = fread(mBuffer, sizeof(char), BUFFER_SIZE, mFile.get());
-		mTotalRead += count;
-		return count;
+		// we can safely cast as read will never be greater than unsigned
+		buffer.Size = (unsigned)fread(&buffer.RawBuffer, sizeof(char), BUFFER_SIZE, mFile.get());
+		mTotalRead += buffer.Size;
+		return buffer.Size;
 	}
 
-	void write(std::array<char,BUFFER_SIZE> content, long size)
+	
+
+	void write(READ_WRITE_BUFFER& buffer)
 	{
-		size_t count = fwrite(&content, sizeof(char), size, mFile.get());
-		if (count != size)
+		auto count = fwrite(&buffer.RawBuffer, sizeof(char), buffer.Size, mFile.get());
+		if (count != buffer.Size)
 		{
 			// throw?
 		}
@@ -90,5 +105,12 @@ public:
 
 	void read();
 
-	void write();
+	void write(READ_WRITE_BUFFER& buffer)
+	{
+		auto count = gzwrite(mFile.get(), &buffer.RawBuffer, buffer.Size);
+		if (count <= 0)
+		{
+			// throw?
+		}
+	}
 };
