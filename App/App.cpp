@@ -5,18 +5,36 @@
 
 #include "argparse.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
-    std::cout << "Hello World!\n";
+    argparse::ArgumentParser program("Back to the future");
+
+    argparse::ArgumentParser packCommand("pack");
+    packCommand.add_description("Packs given folder");
+    packCommand.add_argument("input")
+        .help("Path to folder that should be packed");
+    packCommand.add_argument("output")
+        .help("Path to folder were file will be placed");
+
+    argparse::ArgumentParser unpackCommand("unpack");
+    unpackCommand.add_description("Unpacks given file");
+    unpackCommand.add_argument("input")
+        .help("Path to file");
+    unpackCommand.add_argument("output")
+        .help("Path to folder were unpacked content will be placed");
+
+
+    program.add_subparser(packCommand);
+    program.add_subparser(unpackCommand);
+
+    try {
+        program.parse_args(argc, argv);
+    }
+    catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
+        return 1;
+    }
+
+    return 0;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
