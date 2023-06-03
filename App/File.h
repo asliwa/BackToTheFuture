@@ -24,12 +24,14 @@ using unique_gzfile_ptr = std::unique_ptr<gzFile_s, gzfile_deleter>;
 
 static constexpr size_t BUFFER_SIZE = 8 * 1024; // 8KB buffer size, prolly the best? maybe tune this
 
+using CRC = unsigned long;
+
 struct READ_WRITE_BUFFER
 {
 	// raw buffer for read/write content, max defined
-	char RawBuffer[BUFFER_SIZE];
+	unsigned char RawBuffer[BUFFER_SIZE];
 	// actual valid size of content in buffer
-	unsigned Size;
+	unsigned long Size;
 
 	READ_WRITE_BUFFER()
 	{
@@ -46,9 +48,12 @@ class File
 	unique_file_ptr mFile;
 	size_t mTotalRead = 0;
 	long mSize;
+	CRC mCrc = crc32(0L, Z_NULL, 0);
+
+	const std::filesystem::path& mPath;
 
 public:
-	File(const std::filesystem::path& path)
+	File(const std::filesystem::path& path) : mPath(path)
 	{
 		std::FILE* rawFilePtr;
 		if (_wfopen_s(&rawFilePtr, path.c_str(), L"wb"))
@@ -71,7 +76,16 @@ public:
 	bool read(READ_WRITE_BUFFER& buffer)
 	{
 		// we can safely cast as read will never be greater than unsigned
-		buffer.Size = (unsigned)fread(&buffer.RawBuffer, sizeof(char), BUFFER_SIZE, mFile.get());
+		buffer.Size = (unsigned long)fread(&buffer.RawBuffer, sizeof(char), BUFFER_SIZE, mFile.get());
+
+		// calculate crc of first chunk
+		// not great approach (crc calculation hidden in first read) but most optimal (no double read issued)
+		// decided to keep inside 
+		if (mTotalRead == 0)
+		{
+			mCrc = crc32(mCrc, &buffer.RawBuffer[0], buffer.Size);
+		}
+
 		mTotalRead += buffer.Size;
 		return buffer.Size;
 	}
@@ -87,7 +101,9 @@ public:
 		}
 	}
 
-	long getSize() const { return mSize; }
+	size_t getSize() const { return mSize; }
+	CRC getCrc() const { return mCrc; }
+	const std::filesystem::path& getPath() const { return mPath; }
 };
 
 class CompressedFile

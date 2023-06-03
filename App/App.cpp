@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
         std::cout << input << std::endl;
         std::cout << output << std::endl;
 
-        Packer{ input, output };
+        Packer{ input, output }.run();
     }
     
     if (program.is_subcommand_used("unpack"))

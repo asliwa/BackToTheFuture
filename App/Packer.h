@@ -8,11 +8,12 @@
 #include "IPackaging.h"
 
 #include "File.h"
+#include "Metadata.h"
 
 class Packer : IPackaging
 {
 	CompressedFile mRawData;
-	//File mMetadata;
+	Metadata mMetadata;
 
 public:
 	Packer(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder), mRawData(std::filesystem::path(mWorkingPath) / "Raw")
@@ -37,7 +38,10 @@ public:
 			while (file.read(buffer))
 			{
 				mRawData.write(buffer);
-			}		
+			}
+
+			mMetadata.add(file);
+
 		}
 	}
 
