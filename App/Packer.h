@@ -7,6 +7,8 @@
 
 #include "IPackaging.h"
 
+#include "File.h"
+
 class Packer : IPackaging
 {
 
@@ -17,14 +19,21 @@ public:
 
 	void run() override
 	{
-		for (const auto& path : std::filesystem::recursive_directory_iterator(mInputPath))
+		for (const auto& iter : std::filesystem::recursive_directory_iterator(mInputPath))
 		{
 			// TODO: can throw!
-			if (!path.is_regular_file())
+			if (!iter.is_regular_file())
 			{
 				// trace it
 				continue;
 			}
+
+
+
+			auto file = File{ iter.path() };
+
+			
+		
 		}
 	}
 
