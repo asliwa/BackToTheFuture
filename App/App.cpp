@@ -1,7 +1,5 @@
 // App.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-
-#define ZLIB_WINAPI
 #include <iostream>
 
 #include "argparse.hpp"
