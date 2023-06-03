@@ -12,6 +12,7 @@
 class Packer : IPackaging
 {
 
+
 public:
 	Packer(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder)
 	{
