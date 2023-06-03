@@ -88,6 +88,12 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="File.h" />
+    <ClInclude Include="IPackaging.h" />
+    <ClInclude Include="Packer.h" />
+    <ClInclude Include="Unpacker.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

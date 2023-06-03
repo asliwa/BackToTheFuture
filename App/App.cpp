@@ -8,6 +8,8 @@
 
 #include "zlib.h"
 
+#include "Packer.h"
+
 int main(int argc, char* argv[])
 {
     argparse::ArgumentParser program("Back to the future");
@@ -39,9 +41,24 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    z_stream c_stream; /* compression stream */
-    auto xd = deflateInit(&c_stream, Z_DEFAULT_COMPRESSION);
+    if (program.is_subcommand_used("pack"))
+    {
+        auto input = packCommand.get("input");
+        auto output = packCommand.get("output");
+
+        std::cout << input << std::endl;
+        std::cout << output << std::endl;
+
+        Packer{ input, output };
+    }
+    
+    if (program.is_subcommand_used("unpack"))
+    {
+
+    }
 
 
+    /*std::cout << xd << std::endl;
+    std::cout << xdd << std::endl;*/
     return 0;
 }
