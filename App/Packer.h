@@ -30,6 +30,6 @@ public:
 
 	void validate() override
 	{
-
+		// check folder?
 	}
 };

@@ -91,6 +91,7 @@
   <ItemGroup>
     <ClInclude Include="File.h" />
     <ClInclude Include="IPackaging.h" />
+    <ClInclude Include="Metadata.h" />
     <ClInclude Include="Packer.h" />
     <ClInclude Include="Unpacker.h" />
   </ItemGroup>

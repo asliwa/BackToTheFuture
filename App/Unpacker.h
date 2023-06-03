@@ -22,6 +22,6 @@ public:
 
 	void validate() override
 	{
-
+		// check if it is archive
 	}
 };
