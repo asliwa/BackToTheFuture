@@ -22,9 +22,16 @@ using unique_file_ptr = std::unique_ptr<std::FILE, file_deleter>;
 using unique_gzfile_ptr = std::unique_ptr<gzFile_s, gzfile_deleter>;
 
 
+// use raw C fopen/fwrite/fread
+// potential to be faster than c++ streams
+
 class File
 {
 	unique_file_ptr mFile;
+	static constexpr size_t BUFFER_SIZE = 8 * 1024; // 8KB buffer size, prolly the best? maybe tune this
+	char mBuffer[BUFFER_SIZE];
+	size_t mTotalRead = 0;
+	long mSize;
 
 public:
 	File(const std::filesystem::path& path)
@@ -39,14 +46,33 @@ public:
 
 		unique_file_ptr tmp(rawFilePtr);
 		mFile = std::move(tmp);
+
+		memset(mBuffer, 0, BUFFER_SIZE);
+
+		// use seek (should be safe up to 2GB?) 
+		fseek(mFile.get(), 0, SEEK_END); 
+		mSize = ftell(mFile.get());
+		fseek(mFile.get(), 0, SEEK_SET);
 	}
 
 
-	void read();
+	size_t read()
+	{
+		auto count = fread(mBuffer, sizeof(char), BUFFER_SIZE, mFile.get());
+		mTotalRead += count;
+		return count;
+	}
 
-	void write();
+	void write(std::array<char,BUFFER_SIZE> content, long size)
+	{
+		size_t count = fwrite(&content, sizeof(char), size, mFile.get());
+		if (count != size)
+		{
+			// throw?
+		}
+	}
 
-
+	long getSize() const { return mSize; }
 };
 
 class CompressedFile

@@ -12,6 +12,8 @@
 class Packer : IPackaging
 {
 
+	/*CompressedFile mRawData;
+	File mMetadata;*/
 
 public:
 	Packer(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder)
@@ -32,8 +34,7 @@ public:
 
 
 			auto file = File{ iter.path() };
-
-			
+					
 		
 		}
 	}
