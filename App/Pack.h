@@ -5,16 +5,16 @@
 #include "File.h"
 #include "Metadata.h"
 
-class Packer : IPackaging
+class Pack : IPackaging
 {
 	CompressedFile mRawData;
 
 public:
-	Packer(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder), mRawData(std::filesystem::path(mOutputPath) / "Raw", "wb")
+	Pack(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder), mRawData(std::filesystem::path(mOutputPath) / "Raw", "wb")
 	{
 	}
 
-	void run() override
+	void execute() override
 	{
 		std::cout << "PCK: starting packing in folder: " << mInputPath << std::endl;
 

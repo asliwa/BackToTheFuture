@@ -2,25 +2,16 @@
 #include <cstdint>
 #include <filesystem>
 #include <WinDef.h>
-#include <unordered_map>
 #include "File.h"
 
 
-using DuplicatedIndex = size_t;
-
 // move structs
 // no padding
+
 #pragma pack(push,1)
 struct METADATA_ENTRY_HEADER
 {
-	// Byte isDuplicate;
-	union
-	{
-		// byte length of file content
-		size_t Length;
-		// index of original file in entries container
-		DuplicatedIndex Index;
-	};
+	size_t Length;
 	size_t PathLength; // in wchars! not in bytes
 	WCHAR Path[1];
 };
@@ -111,59 +102,3 @@ public:
 		return mEntry->Header.Length;
 	}
 };
-
-//
-//class Metadata
-//{
-//	// keep linked info (CRC of each file with its index in container)
-//	std::unordered_map<CRC, size_t> mInfo;
-//
-//	// container where chronological entries are stored
-//	std::vector<RuntimeMetadataEntry> mEntries;
-//
-//	void addDuplicate(const LogFile& file, const std::unordered_map<CRC, size_t>::iterator& iter)
-//	{
-//		std::cout << "MD: Adding duplicate: " << file.getShortPath() << std::endl;
-//		auto entry = static_cast<METADATA_ENTRY*>(malloc(sizeof(METADATA_ENTRY)));
-//		// check nullptr
-//
-//		entry->Length = sizeof(METADATA_ENTRY);
-//		entry->FileInfo = { true, iter->second };
-//		entry->PathLength = 0;
-//
-//		mEntries.push_back(std::move(RuntimeMetadataEntry(entry)));
-//	}
-//
-//	void addNew(const LogFile& file)
-//	{
-//		std::cout << "MD: Adding new file: " << file.getShortPath() << std::endl;
-//		mInfo.emplace(file.getCrc(), mEntries.size());
-//
-//		auto pathLength = file.getShortPath().native().length();
-//		auto entrySize = sizeof(METADATA_ENTRY) + (pathLength * sizeof(wchar_t));
-//		auto entry = static_cast<METADATA_ENTRY*>(malloc(entrySize));
-//		// check nbulltpr;
-//
-//		// todo: cannot be greater than unsigned int? confirm! 
-//		entry->Length = (unsigned int)entrySize;
-//		entry->FileInfo = { false, file.getSize() };
-//		memcpy_s(&entry->Path, entrySize, file.getShortPath().c_str(), pathLength * sizeof(wchar_t));
-//
-//		mEntries.push_back(std::move(RuntimeMetadataEntry(entry)));
-//	}
-//
-//public:
-//
-//	void add(const LogFile& file)
-//	{
-//		/*auto iter = mInfo.find(file.getCrc());
-//
-//		iter == mInfo.end() ? addNew(file) : addDuplicate(file, iter);*/
-//		addNew(file);
-//	}
-//
-//	bool contains(const LogFile& file)
-//	{
-//		return mInfo.find(file.getCrc()) != mInfo.end();
-//	}
-//};

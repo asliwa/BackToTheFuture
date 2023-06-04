@@ -11,7 +11,7 @@
 #include "Metadata.h"
 
 
-class Unpacker : IPackaging
+class Unpack : IPackaging
 {
 	CompressedFile mRawData;
 
@@ -29,10 +29,10 @@ class Unpacker : IPackaging
 	}
 
 public:
-	Unpacker(std::string inputFile, std::string outputFolder) : IPackaging(inputFile, outputFolder), mRawData(inputFile, "rb")
+	Unpack(std::string inputFile, std::string outputFolder) : IPackaging(inputFile, outputFolder), mRawData(inputFile, "rb")
 	{}
 
-	void run() override
+	void execute() override
 	{
 		METADATA_HEADER header;
 		mRawData.read(header);

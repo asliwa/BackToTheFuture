@@ -44,6 +44,12 @@ protected:
 public:
 	File(const std::filesystem::path& filepath, std::wstring options) : mFullPath(filepath)
 	{
+		if (options == L"wb")
+		{
+			// make sure directories exsist
+			std::filesystem::create_directories(filepath.parent_path());
+		}
+
 		std::FILE* rawFilePtr;
 		if (_wfopen_s(&rawFilePtr, mFullPath.c_str(), options.c_str()))
 		{

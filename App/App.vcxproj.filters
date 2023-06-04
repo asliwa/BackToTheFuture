@@ -20,7 +20,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Packer.h">
+    <ClInclude Include="Pack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="File.h">
@@ -29,7 +29,7 @@
     <ClInclude Include="IPackaging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Unpacker.h">
+    <ClInclude Include="Unpack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Metadata.h">

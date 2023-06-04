@@ -25,15 +25,7 @@ protected:
 	{
 	}
 
-
-	virtual void clean()
-	{
-		if (mStatus == Status::Fail)
-		{
-			// clean dir
-		}
-	}
-
+	// command interface
 	virtual void validate() = 0;
-	virtual void run() = 0;
+	virtual void execute() = 0;
 };

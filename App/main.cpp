@@ -7,8 +7,8 @@
 
 #include "zlib.h"
 
-#include "Packer.h"
-#include "Unpacker.h"
+#include "Pack.h"
+#include "Unpack.h"
 
 int main(int argc, char* argv[])
 {
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
         auto folderName = std::filesystem::path(input).filename();
 
 
-        Packer{ input, output }.run();
+        Pack{ input, output }.execute();
     }
     
     if (program.is_subcommand_used("unpack"))
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
         //std::filesystem::path(input);
 
-        Unpacker{ input, output }.run();
+        Unpack{ input, output }.execute();
     }
 
     return 0;

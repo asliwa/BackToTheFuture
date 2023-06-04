@@ -92,8 +92,8 @@
     <ClInclude Include="File.h" />
     <ClInclude Include="IPackaging.h" />
     <ClInclude Include="Metadata.h" />
-    <ClInclude Include="Packer.h" />
-    <ClInclude Include="Unpacker.h" />
+    <ClInclude Include="Pack.h" />
+    <ClInclude Include="Unpack.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
