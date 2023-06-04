@@ -1,12 +1,14 @@
 // App.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include <iostream>
+#include <filesystem>
 
 #include "argparse.hpp"
 
 #include "zlib.h"
 
 #include "Packer.h"
+#include "Unpacker.h"
 
 int main(int argc, char* argv[])
 {
@@ -47,16 +49,27 @@ int main(int argc, char* argv[])
         std::cout << input << std::endl;
         std::cout << output << std::endl;
 
+
+        auto folderName = std::filesystem::path(input).filename();
+
+
         Packer{ input, output }.run();
     }
     
     if (program.is_subcommand_used("unpack"))
     {
+        auto input = unpackCommand.get("input");
+        auto output = unpackCommand.get("output");
 
+        std::cout << input << std::endl;
+        std::cout << output << std::endl;
+
+        // validate arguments
+
+        //std::filesystem::path(input);
+
+        Unpacker{ input, output }.run();
     }
 
-
-    /*std::cout << xd << std::endl;
-    std::cout << xdd << std::endl;*/
     return 0;
 }

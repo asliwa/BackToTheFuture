@@ -1,10 +1,5 @@
 #pragma once
 
-#include <string>
-#include <filesystem>
-#include <rpc.h>
-#include <sstream>
-
 #include "IPackaging.h"
 
 #include "File.h"
@@ -13,40 +8,61 @@
 class Packer : IPackaging
 {
 	CompressedFile mRawData;
-	Metadata mMetadata;
 
 public:
-	Packer(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder), mRawData(std::filesystem::path(mWorkingPath) / "Raw")
+	Packer(std::string inputFolder, std::string outputFolder) : IPackaging(inputFolder, outputFolder), mRawData(std::filesystem::path(mOutputPath) / "Raw", "wb")
 	{
 	}
 
 	void run() override
 	{
+		std::cout << "PCK: starting packing in folder: " << mInputPath << std::endl;
+
+		METADATA_HEADER header { PACKAGE_GUID };		
+		mRawData.write(header);
+
+		std::cout << "PCK: global header written " << mInputPath << std::endl;
+		
 		for (const auto& iter : std::filesystem::recursive_directory_iterator(mInputPath))
 		{
+			std::cout << "PCK: File: " << iter.path() << std::endl;
 			// TODO: can throw!
 			if (!iter.is_regular_file())
 			{
 				// trace it
+				std::cout << "PCK: Skipping this file as it is not regular!" << std::endl;
 				continue;
 			}
 
-			auto file = File{ iter.path() };
-			
-			READ_WRITE_BUFFER buffer;
+			// open: does file extension matter? assumption here that it does not, we are reading *all* files in given directory, not .bin & .txt only
 
-			while (file.read(buffer))
-			{
-				mRawData.write(buffer);
-			}
-
-			mMetadata.add(file);
+			pack(iter.path());
 
 		}
+
+		std::cout << "PCK: finished packing in folder: " << mInputPath << std::endl;
 	}
 
 	void validate() override
 	{
 		// check folder?
+	}
+
+	void pack(const std::filesystem::path& path)
+	{
+		auto file = LogFile{ path, mInputPath };
+
+		auto buffer = std::make_unique<DefaultBuffer::element_type>();
+		
+		// get MD
+		auto bytesLoaded = MetadataEx(file).load(buffer);
+		// write MD
+		auto bytesWritten = mRawData.write(buffer, bytesLoaded);
+		
+		// read from file
+		while (auto bytesRead = file.read(buffer))
+		{
+			bytesWritten = mRawData.write(buffer, bytesRead);
+		}
 	}
 };

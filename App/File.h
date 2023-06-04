@@ -26,18 +26,9 @@ static constexpr size_t BUFFER_SIZE = 8 * 1024; // 8KB buffer size, prolly the b
 
 using CRC = unsigned long;
 
-struct READ_WRITE_BUFFER
-{
-	// raw buffer for read/write content, max defined
-	unsigned char RawBuffer[BUFFER_SIZE];
-	// actual valid size of content in buffer
-	unsigned long Size;
-
-	READ_WRITE_BUFFER()
-	{
-		memset(&RawBuffer, 0, BUFFER_SIZE);
-	}
-};
+template <size_t N>
+using Buffer = std::unique_ptr<std::array<std::uint8_t, N>>;
+using DefaultBuffer = Buffer<BUFFER_SIZE>;
 
 
 // use raw C fopen/fwrite/fread
@@ -45,18 +36,16 @@ struct READ_WRITE_BUFFER
 
 class File
 {
+protected:
 	unique_file_ptr mFile;
-	size_t mTotalRead = 0;
-	long mSize;
-	CRC mCrc = crc32(0L, Z_NULL, 0);
 
-	const std::filesystem::path& mPath;
+	const std::filesystem::path& mFullPath;
 
 public:
-	File(const std::filesystem::path& path) : mPath(path)
+	File(const std::filesystem::path& filepath, std::wstring options) : mFullPath(filepath)
 	{
 		std::FILE* rawFilePtr;
-		if (_wfopen_s(&rawFilePtr, path.c_str(), L"wb"))
+		if (_wfopen_s(&rawFilePtr, mFullPath.c_str(), options.c_str()))
 		{
 			// throw?
 			return;
@@ -65,53 +54,79 @@ public:
 
 		unique_file_ptr tmp(rawFilePtr);
 		mFile = std::move(tmp);
-
-		// use seek (should be safe up to 2GB?) 
-		fseek(mFile.get(), 0, SEEK_END); 
-		mSize = ftell(mFile.get());
-		fseek(mFile.get(), 0, SEEK_SET);
 	}
 
 
-	bool read(READ_WRITE_BUFFER& buffer)
+	template <size_t N>
+	size_t read(Buffer<N>& buffer)
 	{
-		// we can safely cast as read will never be greater than unsigned
-		buffer.Size = (unsigned long)fread(&buffer.RawBuffer, sizeof(char), BUFFER_SIZE, mFile.get());
+		return fread(buffer.get(), sizeof(char), N, mFile.get());
+	}
 
-		// calculate crc of first chunk
-		// not great approach (crc calculation hidden in first read) but most optimal (no double read issued)
-		// decided to keep inside 
+
+	template <size_t N>
+	size_t write(Buffer<N>& buffer)
+	{
+		return fwrite(buffer.get(), sizeof(char), N, mFile.get());
+	}
+
+	template <size_t N>
+	size_t write(Buffer<N>& buffer, size_t size)
+	{
+		return fwrite(buffer.get(), sizeof(char), size, mFile.get());
+	}
+
+	const std::filesystem::path& getPath() const { return mFullPath; }
+};
+
+
+class LogFile : protected File
+{
+	const std::filesystem::path mFolderPath;
+	const std::filesystem::path mRelativePath;
+	
+	CRC mCrc = crc32(0L, Z_NULL, 0);
+
+	size_t mTotalRead = 0;
+	size_t mSize = 0;
+
+
+public:
+	LogFile(const std::filesystem::path& filepath, const std::filesystem::path& folderPath) :
+		File(filepath, L"rb"), // open binary only
+		mFolderPath(folderPath),
+		mRelativePath(std::filesystem::relative(mFullPath, mFolderPath))
+	{
+		mSize = std::filesystem::file_size(filepath);
+	}
+
+	template <size_t N>
+	size_t read(Buffer<N>& buffer)
+	{
+		auto read = File::read<N>(buffer);
 		if (mTotalRead == 0)
 		{
-			mCrc = crc32(mCrc, &buffer.RawBuffer[0], buffer.Size);
+			mCrc = crc32(mCrc, reinterpret_cast<const Bytef*>(buffer.get()), N);
 		}
 
-		mTotalRead += buffer.Size;
-		return buffer.Size;
+		mTotalRead += read;
+
+		return read;
 	}
 
-	
-
-	void write(READ_WRITE_BUFFER& buffer)
-	{
-		auto count = fwrite(&buffer.RawBuffer, sizeof(char), buffer.Size, mFile.get());
-		if (count != buffer.Size)
-		{
-			// throw?
-		}
-	}
-
-	size_t getSize() const { return mSize; }
 	CRC getCrc() const { return mCrc; }
-	const std::filesystem::path& getPath() const { return mPath; }
+	size_t getSize() const { return mSize; }
+
+	const std::filesystem::path& getShortPath() const { return mRelativePath; }
 };
+
 
 class CompressedFile
 {
 	unique_gzfile_ptr mFile;
 
 public:
-	CompressedFile(const std::filesystem::path& path) : mFile(gzopen_w(path.c_str(), "wb"))
+	CompressedFile(const std::filesystem::path& path, std::string options) : mFile(gzopen_w(path.c_str(), options.c_str()))
 	{
 		if (mFile.get() == nullptr)
 		{
@@ -119,14 +134,36 @@ public:
 		}
 	}
 
-	void read();
-
-	void write(READ_WRITE_BUFFER& buffer)
+	template <size_t N>
+	int read(Buffer<N>& buffer)
 	{
-		auto count = gzwrite(mFile.get(), &buffer.RawBuffer, buffer.Size);
-		if (count <= 0)
-		{
-			// throw?
-		}
+		return gzread(mFile.get(), buffer.get(), N);
+	}
+
+	template <typename T>
+	int read(T& data)
+	{
+		return gzread(mFile.get(), &data, sizeof(T));		
+	}
+
+	template <size_t N>
+	int read(Buffer<N>& buffer, size_t size)
+	{
+		// get rid of casting (size should not be greater than unsigned int)
+		return gzread(mFile.get(), buffer.get(), (unsigned int)size);
+	}
+
+
+	template <size_t N>
+	int write(Buffer<N>& buffer, size_t size)
+	{
+		// get rid of casting (size should not be greater than unsigned int)
+		return gzwrite(mFile.get(), buffer.get(), (unsigned int)size);
+	}
+
+	template <typename T>
+	int write(const T& data)
+	{
+		return gzwrite(mFile.get(), &data, sizeof(T));
 	}
 };
