@@ -49,7 +49,7 @@ public:
 
 		while (mRawData.read(entrySize))
 		{
-			std::cout << "UPCK: MD entry size: "<< entrySize << std::endl;
+			// std::cout << "UPCK: MD entry size: "<< entrySize << std::endl;
 			mRawData.read(mBuffer, entrySize - sizeof(size_t));
 
 			auto fileMd = MetadataEx(mBuffer, entrySize);

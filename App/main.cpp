@@ -50,8 +50,7 @@ int main(int argc, char* argv[])
         std::cout << output << std::endl;
 
 
-        auto folderName = std::filesystem::path(input).filename();
-
+        // validate arguments
 
         Pack{ input, output }.execute();
     }
@@ -65,8 +64,6 @@ int main(int argc, char* argv[])
         std::cout << output << std::endl;
 
         // validate arguments
-
-        //std::filesystem::path(input);
 
         Unpack{ input, output }.execute();
     }
